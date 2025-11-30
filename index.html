@@ -871,35 +871,37 @@
     }
 
     async function deleteProject(id) {
-      if (confirm("আপনি কি নিশ্চিত যে এই প্রজেক্টটি ডিলিট করতে চান?")) {
-        try {
-          if (!window.firebase) {
-            throw new Error("Firebase is not ready");
-          }
-
-          const { db, doc, deleteDoc } = window.firebase;
-          await deleteDoc(doc(db, "projects", id));
-          
-          showToast("প্রজেক্ট ডিলিট করা হয়েছে!", "success");
-          await loadProjects(); // Reload the list
-        } catch (err) {
-          console.error("Firebase delete error:", err);
-          showToast("প্রজেক্ট ডিলিট করা যায়নি!", "error");
+      try {
+        if (!window.firebase) {
+          throw new Error("Firebase is not ready");
         }
+
+        const { db, doc, deleteDoc } = window.firebase;
+        await deleteDoc(doc(db, "projects", id));
+        
+        showToast("প্রজেক্ট ডিলিট করা হয়েছে!", "success");
+        await loadProjects(); // Reload the list
+      } catch (err) {
+        console.error("Firebase delete error:", err);
+        showToast("প্রজেক্ট ডিলিট করা যায়নি!", "error");
       }
     }
 
     // 🔸 Password protected operations
     function requestEdit(id) {
+      console.log("Edit requested for project:", id);
       pendingAction = 'edit';
       pendingProjectId = id;
       openPasswordModal();
     }
 
     function requestDelete(id) {
-      pendingAction = 'delete';
-      pendingProjectId = id;
-      openPasswordModal();
+      console.log("Delete requested for project:", id);
+      if (confirm("আপনি কি নিশ্চিত যে এই প্রজেক্টটি ডিলিট করতে চান?")) {
+        pendingAction = 'delete';
+        pendingProjectId = id;
+        openPasswordModal();
+      }
     }
 
     function verifyPassword(event) {
@@ -917,6 +919,9 @@
         if (passwordInput === PASSWORD) {
           // Password is correct, perform the pending action
           closePasswordModal();
+          showToast("পাসওয়ার্ড সঠিক!", "success");
+          
+          console.log("Password correct, performing action:", pendingAction, "on project:", pendingProjectId);
           
           if (pendingAction === 'edit') {
             editProject(pendingProjectId);
@@ -924,7 +929,9 @@
             deleteProject(pendingProjectId);
           }
           
-          showToast("পাসওয়ার্ড সঠিক!", "success");
+          // Reset pending action
+          pendingAction = null;
+          pendingProjectId = null;
         } else {
           // Password is incorrect
           showToast("পাসওয়ার্ড ভুল! আবার চেষ্টা করুন", "error");
@@ -978,8 +985,12 @@
 
     // 🔸 এডিট করা
     function editProject(id) {
+      console.log("Editing project:", id);
       const p = projects.find(x => x.id === id);
-      if (!p) return;
+      if (!p) {
+        showToast("প্রজেক্ট খুঁজে পাওয়া যায়নি!", "error");
+        return;
+      }
       
       document.getElementById('projectId').value = p.id;
       document.getElementById('projectName').value = p.name;
