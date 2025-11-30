@@ -712,7 +712,6 @@
                 </button>
               </div>
               <p style="font-size: 0.85rem; color: var(--gray); margin-top: 5px;">
-                
               </p>
             </div>
             <div class="form-actions">
@@ -746,16 +745,15 @@
     let projects = [];
     let isEditing = false;
     let currentImage = null;
-    let pendingAction = null; // To store the action (edit/delete) that requires password
-    let pendingProjectId = null; // To store the project ID for the pending action
-    const PASSWORD = "9923"; // The password for edit/delete operations
+    let pendingAction = null;
+    let pendingProjectId = null;
+    const PASSWORD = "9923";
 
     // 🔸 Firebase functions
     async function loadProjects() {
       try {
         showLoading(true);
         
-        // Wait for Firebase to be ready
         if (!window.firebase) {
           await waitForFirebase();
         }
@@ -781,12 +779,9 @@
         
         renderProjects();
         updateStats();
-        showToast("প্রজেক্ট সফলভাবে লোড হয়েছে!", "success");
       } catch (err) {
         console.error("Firebase load error:", err);
         showToast("ডেটা লোড করা যায়নি! ইন্টারনেট চেক করুন", "error");
-        
-        // Fallback: Show empty state
         projects = [];
         renderProjects();
         updateStats();
@@ -804,7 +799,6 @@
           }
         }, 100);
         
-        // Timeout after 10 seconds
         setTimeout(() => {
           clearInterval(checkFirebase);
           resolve();
@@ -846,7 +840,6 @@
           updatedAt: new Date().toISOString()
         };
 
-        // Add createdAt for new projects
         if (!document.getElementById('projectId').value) {
           projectData.createdAt = new Date().toISOString();
         }
@@ -860,7 +853,7 @@
         }
 
         closeModal();
-        await loadProjects(); // Reload to get the latest data
+        await loadProjects();
       } catch (err) {
         console.error("Firebase save error:", err);
         showToast(err.message || "প্রজেক্ট সেভ করা যায়নি!", "error");
@@ -880,7 +873,7 @@
         await deleteDoc(doc(db, "projects", id));
         
         showToast("প্রজেক্ট ডিলিট করা হয়েছে!", "success");
-        await loadProjects(); // Reload the list
+        await loadProjects();
       } catch (err) {
         console.error("Firebase delete error:", err);
         showToast("প্রজেক্ট ডিলিট করা যায়নি!", "error");
@@ -889,19 +882,17 @@
 
     // 🔸 Password protected operations
     function requestEdit(id) {
-      console.log("Edit requested for project:", id);
+      console.log("Edit requested for:", id);
       pendingAction = 'edit';
       pendingProjectId = id;
       openPasswordModal();
     }
 
     function requestDelete(id) {
-      console.log("Delete requested for project:", id);
-      if (confirm("আপনি কি নিশ্চিত যে এই প্রজেক্টটি ডিলিট করতে চান?")) {
-        pendingAction = 'delete';
-        pendingProjectId = id;
-        openPasswordModal();
-      }
+      console.log("Delete requested for:", id);
+      pendingAction = 'delete';
+      pendingProjectId = id;
+      openPasswordModal();
     }
 
     function verifyPassword(event) {
@@ -914,26 +905,22 @@
       submitBtn.innerHTML = '<div class="loading"></div> চেক হচ্ছে...';
       submitBtn.disabled = true;
 
-      // Simulate password checking with a small delay
       setTimeout(() => {
         if (passwordInput === PASSWORD) {
-          // Password is correct, perform the pending action
-          closePasswordModal();
           showToast("পাসওয়ার্ড সঠিক!", "success");
+          closePasswordModal();
           
-          console.log("Password correct, performing action:", pendingAction, "on project:", pendingProjectId);
-          
+          // Perform the pending action
           if (pendingAction === 'edit') {
+            console.log("Performing edit for:", pendingProjectId);
             editProject(pendingProjectId);
           } else if (pendingAction === 'delete') {
-            deleteProject(pendingProjectId);
+            console.log("Performing delete for:", pendingProjectId);
+            if (confirm("আপনি কি নিশ্চিত যে এই প্রজেক্টটি ডিলিট করতে চান?")) {
+              deleteProject(pendingProjectId);
+            }
           }
-          
-          // Reset pending action
-          pendingAction = null;
-          pendingProjectId = null;
         } else {
-          // Password is incorrect
           showToast("পাসওয়ার্ড ভুল! আবার চেষ্টা করুন", "error");
           document.getElementById('passwordInput').value = '';
           document.getElementById('passwordInput').focus();
@@ -948,13 +935,11 @@
     function previewImage(event) {
       const file = event.target.files[0];
       if (file) {
-        // Check file size (max 2MB)
         if (file.size > 2 * 1024 * 1024) {
           showToast("ছবির সাইজ 2MB এর কম হতে হবে!", "error");
           return;
         }
         
-        // Check file type
         if (!file.type.startsWith('image/')) {
           showToast("শুধুমাত্র ছবি ফাইল আপলোড করতে পারবেন!", "error");
           return;
@@ -998,7 +983,6 @@
       document.getElementById('projectNotes').value = p.notes || '';
       document.getElementById('reminderType').value = p.reminder || 'none';
       
-      // ছবি সেট করা
       if (p.image) {
         currentImage = p.image;
         document.getElementById('imagePreview').src = p.image;
@@ -1088,7 +1072,6 @@
         return;
       }
       
-      // Sort projects by creation date (newest first)
       const sortedProjects = [...projects].sort((a, b) => {
         return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
       });
@@ -1129,7 +1112,6 @@
       toastMessage.textContent = message;
       toast.className = 'toast';
       
-      // Set icon based on type
       if (type === "error") {
         toast.classList.add('error');
         toastIcon.className = 'fas fa-exclamation-circle';
@@ -1179,27 +1161,23 @@
 
     // 🔸 ইনিশিয়ালাইজেশন
     document.addEventListener('DOMContentLoaded', function() {
-      // Load saved theme
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
         document.querySelector('.theme-toggle i').className = 'fas fa-sun';
       }
 
-      // Load projects when Firebase is ready
       const initApp = () => {
         if (window.firebase) {
           loadProjects();
           setupRealTimeListener();
         } else {
-          // If Firebase takes time, wait for it
           setTimeout(initApp, 100);
         }
       };
 
       initApp();
 
-      // Close modal when clicking outside
       document.getElementById('modal').addEventListener('click', function(e) {
         if (e.target === this) {
           closeModal();
@@ -1212,7 +1190,6 @@
         }
       });
 
-      // Escape key to close modal
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
           closeModal();
@@ -1221,14 +1198,14 @@
       });
     });
 
-    // 🔸 Real-time listener (optional enhancement)
+    // 🔸 Real-time listener
     function setupRealTimeListener() {
       try {
         const { db, collection, onSnapshot } = window.firebase;
         
         onSnapshot(collection(db, "projects"), (snapshot) => {
           console.log("Real-time update received");
-          loadProjects(); // Reload when data changes
+          loadProjects();
         }, (error) => {
           console.log("Real-time listener error:", error);
         });
@@ -1237,7 +1214,6 @@
       }
     }
 
-    // Make loadProjects available globally
     window.loadProjects = loadProjects;
   </script>
 </body>
