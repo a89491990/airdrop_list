@@ -896,68 +896,51 @@
     }
 
     function verifyPassword(event) {
-      event.preventDefault();
-      
-      const passwordInput = document.getElementById('passwordInput').value;
-      const submitBtn = document.getElementById('passwordSubmitBtn');
-      const originalText = submitBtn.innerHTML;
-      
-      submitBtn.innerHTML = '<div class="loading"></div> চেক হচ্ছে...';
-      submitBtn.disabled = true;
+  event.preventDefault();
+  
+  const passwordInput = document.getElementById('passwordInput').value;
+  const submitBtn = document.getElementById('passwordSubmitBtn');
+  const originalText = submitBtn.innerHTML;
+  
+  submitBtn.innerHTML = '<div class="loading"></div> চেক হচ্ছে...';
+  submitBtn.disabled = true;
 
-      setTimeout(() => {
-        if (passwordInput === PASSWORD) {
-          showToast("পাসওয়ার্ড সঠিক!", "success");
-          closePasswordModal();
-          
-          // Perform the pending action
-          if (pendingAction === 'edit') {
-            console.log("Performing edit for:", pendingProjectId);
-            editProject(pendingProjectId);
-          } else if (pendingAction === 'delete') {
-            console.log("Performing delete for:", pendingProjectId);
-            if (confirm("আপনি কি নিশ্চিত যে এই প্রজেক্টটি ডিলিট করতে চান?")) {
-              deleteProject(pendingProjectId);
-            }
-          }
-        } else {
-          showToast("পাসওয়ার্ড ভুল! আবার চেষ্টা করুন", "error");
-          document.getElementById('passwordInput').value = '';
-          document.getElementById('passwordInput').focus();
-        }
-        
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-      }, 500);
-    }
+  setTimeout(() => {
+    if (passwordInput === PASSWORD) {
+      showToast("পাসওয়ার্ড সঠিক!", "success");
 
-    // 🔸 ছবি প্রিভিউ ফাংশন
-    function previewImage(event) {
-      const file = event.target.files[0];
-      if (file) {
-        if (file.size > 2 * 1024 * 1024) {
-          showToast("ছবির সাইজ 2MB এর কম হতে হবে!", "error");
-          return;
+      // 🔹 এখন pendingAction অনুযায়ী কাজ করো
+      if (pendingAction === 'edit') {
+        editProject(pendingProjectId);
+      } 
+      else if (pendingAction === 'delete') {
+        if (confirm("আপনি কি নিশ্চিত যে এই প্রজেক্টটি ডিলিট করতে চান?")) {
+          deleteProject(pendingProjectId);
         }
-        
-        if (!file.type.startsWith('image/')) {
-          showToast("শুধুমাত্র ছবি ফাইল আপলোড করতে পারবেন!", "error");
-          return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          currentImage = e.target.result;
-          document.getElementById('imagePreview').src = currentImage;
-          document.getElementById('imagePreview').style.display = 'block';
-          document.getElementById('removeImage').style.display = 'inline-block';
-        }
-        reader.onerror = function() {
-          showToast("ছবি লোড করা যায়নি!", "error");
-        }
-        reader.readAsDataURL(file);
       }
+
+      // 🔹 সব কাজ শেষে modal বন্ধ করো এবং রিসেট করো
+      closePasswordModal();
+      pendingAction = null;
+      pendingProjectId = null;
+
+    } else {
+      showToast("পাসওয়ার্ড ভুল! আবার চেষ্টা করুন", "error");
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('passwordInput').focus();
     }
+    
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+  }, 500);
+}
+
+function closePasswordModal() {
+  document.getElementById('passwordModal').classList.remove('active');
+  // ❌ এগুলো আর দরকার নেই এখানে:
+  // pendingAction = null;
+  // pendingProjectId = null;
+}
 
     // 🔸 ছবি সরান
     function removeImage() {
